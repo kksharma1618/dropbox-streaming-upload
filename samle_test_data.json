@@ -1,9 +1,10 @@
 {
     "access_token": "",
+    "clearUnitTestFolder": "/dropbox_streaming_upload_unit_test",
     "uploads": [
         {
-            "localFilePath": "/localPath/localFile.jpg",
-            "destination": "/ut/f1.jpg"
+            "localFilePath": "./tests/content/risingearth.jpg",
+            "destination": "/dropbox_streaming_upload_unit_test/risingearth.jpg"
         }
     ]
 }

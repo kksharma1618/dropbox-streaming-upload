@@ -1,4 +1,4 @@
-test_data.json
+tests/test_data.json
 # Logs
 logs
 *.log
