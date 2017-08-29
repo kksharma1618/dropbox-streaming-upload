@@ -1,0 +1,9 @@
+{
+    "access_token": "",
+    "uploads": [
+        {
+            "localFilePath": "/localPath/localFile.jpg",
+            "destination": "/ut/f1.jpg"
+        }
+    ]
+}
