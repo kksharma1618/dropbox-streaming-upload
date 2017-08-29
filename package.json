@@ -1,0 +1,50 @@
+{
+  "name": "dropbox-streaming-upload",
+  "version": "1.0.0",
+  "description": "Streaming uploads to dropbox v2 api",
+  "main": "build/index",
+  "types": "build/index",
+  "engines": {
+    "node": ">=4"
+  },
+  "scripts": {
+    "prepublish___": "npm run build",
+    "build": "tsc",
+    "test": "mocha -r ts-node/register src/**/*.spec.ts",
+    "testwatch": "mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts",
+    "lint": "tslint src/**/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kksharma1618/dropbox-streaming-upload.git"
+  },
+  "keywords": [
+    "dropbox",
+    "v2",
+    "stream",
+    "uploads"
+  ],
+  "author": "Krishna Kant Sharma <kks@krishnakantsharma.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kksharma1618/dropbox-streaming-upload/issues"
+  },
+  "homepage": "https://github.com/kksharma1618/dropbox-streaming-upload#readme",
+  "devDependencies": {
+    "@types/assert-plus": "^1.0.3",
+    "@types/chai": "^3.5.2",
+    "@types/is-stream": "^1.1.0",
+    "@types/mocha": "^2.2.41",
+    "@types/request": "^2.0.3",
+    "chai": "^3.5.0",
+    "chai-shallow-deep-equal": "^1.4.6",
+    "mocha": "^3.3.0",
+    "ts-node": "^3.0.4",
+    "typescript": "^2.3.2"
+  },
+  "dependencies": {
+    "assert-plus": "^1.0.0",
+    "is-stream": "^1.1.0",
+    "request": "^2.81.0"
+  }
+}
