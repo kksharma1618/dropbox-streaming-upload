@@ -1,7 +1,7 @@
 import * as request from 'request'
 import * as assert from 'assert-plus'
 import {readable as isReadableStream} from 'is-stream'
-import {promiseFromCallback, safeParseJson} from './utils'
+import { promiseFromCallback, safeParseJson, makeRequest, getHttpError} from './utils'
 
 const chunkedUploadMinSize = 1.5e+8
 const dropboxApiBasePath = 'https://content.dropboxapi.com/2/files'
@@ -47,6 +47,23 @@ export default async function upload(options: IOptions) {
 
 async function handleChunkedUpload(options: IOptions) {
 
+    const sessionRes = await makeRequest({
+        url: `${dropboxApiBasePath}/upload_session/start`,
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${options.access_token}`,
+            'Content-Type': 'application/octet-stream',
+            'Dropbox-API-Arg': JSON.stringify({close: false})
+        }
+    })
+
+    assert.string(sessionRes.session_id, 'cannot start upload session ' + JSON.stringify(sessionRes))
+
+    const sessionId = sessionRes.session_id
+
+    // tslint:disable-next-line:no-console
+    console.log('sres', sessionRes)
+    throw 1
 }
 async function handleSimpleUpload(options: IOptions) {
     return promiseFromCallback((next) => {
@@ -72,11 +89,7 @@ async function handleSimpleUpload(options: IOptions) {
                 return next(err)
             }
             if (resp.statusCode !== 200) {
-                const sbody = typeof body === 'object' ? JSON.stringify(body) : body
-                const e = new Error(`${resp.statusCode} ${sbody}`);
-                (e as any).statusCode = resp.statusCode;
-                (e as any).body = safeParseJson(body);
-                return next(e)
+                return next(getHttpError(resp.statusCode, body))
             }
             return next(null, safeParseJson(body))
         })
