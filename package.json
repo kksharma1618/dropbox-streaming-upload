@@ -10,7 +10,7 @@
   "scripts": {
     "prepublish___": "npm run build",
     "build": "tsc",
-    "test": "mocha -r ts-node/register src/**/*.spec.ts",
+    "test": "mocha -r ts-node/register src/**/*.spec.ts --timeout 300000",
     "testwatch": "mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts",
     "lint": "tslint src/**/*.ts"
   },
@@ -36,11 +36,14 @@
     "@types/is-stream": "^1.1.0",
     "@types/mocha": "^2.2.41",
     "@types/request": "^2.0.3",
+    "@types/uuid": "^3.4.1",
     "chai": "^3.5.0",
     "chai-shallow-deep-equal": "^1.4.6",
+    "dropbox": "^2.5.7",
     "mocha": "^3.3.0",
     "ts-node": "^3.0.4",
-    "typescript": "^2.3.2"
+    "typescript": "^2.3.2",
+    "uuid": "^3.1.0"
   },
   "dependencies": {
     "assert-plus": "^1.0.0",
