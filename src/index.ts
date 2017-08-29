@@ -37,6 +37,9 @@ export default async function upload(options: IOptions) {
 }
 
 async function handleChunkedUpload(options: IOptions) {
+
+}
+async function handleSimpleUpload(options: IOptions) {
     const writeStream = request.post({
         uri: `${dropboxApiBasePath}/upload`,
         method: 'POST',
@@ -52,7 +55,4 @@ async function handleChunkedUpload(options: IOptions) {
         }
     })
     options.readable_stream.pipe(writeStream)
-}
-async function handleSimpleUpload(options: IOptions) {
-
 }
