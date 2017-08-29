@@ -37,18 +37,20 @@ describe('running testData.uploads', () => {
         it(`upload -> ${upload.localFilePath}`, async () => {
             await runTestForUpload(upload)
         })
+        it(`upload cancellation -> ${upload.localFilePath}`, async () => {
+            await runTestForUpload(upload, true)
+        })
     }
 })
 
-async function runTestForUpload(upload) {
+async function runTestForUpload(upload, testCancellation = false) {
     assert.string(upload.localFilePath, 'localFilePath')
     assert.string(upload.destination, 'destination')
 
     const localFilePath = path.resolve(__dirname, '../tests', upload.localFilePath)
     const destination = baseDir + '/' + upload.destination
     const {size} = fs.statSync(localFilePath)
-
-    const unit = await dropboxUpload({
+    const args = {
         access_token: data.access_token,
         readable_stream: fs.createReadStream(localFilePath),
         file_size: size,
@@ -56,8 +58,24 @@ async function runTestForUpload(upload) {
         forced_chunked_upload: upload.forced_chunked_upload === undefined ? false : upload.forced_chunked_upload,
         autorename: false,
         mode: 'add'
-    })
-    expect(unit).to.have.property('path_lower', destination)
-    expect(unit).to.have.property('size', size)
-    
+    }
+    if (testCancellation) {
+        setTimeout(() => {
+            (args as any).cancel()
+        }, 10)
+    }
+
+    try {
+        const unit = await dropboxUpload(args)
+
+        chai.assert.notOk(testCancellation, 'upload should have been cancelled')
+
+        expect(unit).to.have.property('path_lower', destination.toLowerCase())
+        expect(unit).to.have.property('size', size)
+    } catch (err) {
+        if (!testCancellation) {
+            throw err
+        }
+        expect(err).to.have.property('message', 'user_aborted')
+    }
 }
