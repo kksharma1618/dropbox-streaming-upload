@@ -1,4 +1,3 @@
-// tslint:disable:no-console
 import * as request from 'request'
 import * as assert from 'assert-plus'
 import {readable as isReadableStream} from 'is-stream'
@@ -15,7 +14,7 @@ export interface IOptions {
     file_size: number,
     destination: string,
     forced_chunked_upload?: boolean,
-    chunk_size: number,
+    chunk_size?: number,
     mute?: boolean,
     autorename?: boolean,
     mode?: string,
@@ -86,14 +85,19 @@ async function handleSimpleUpload(options: IOptions) {
 }
 async function handleChunkedUpload(options: IOptions) {
 
-    const sessionId = await uploadSessionStart(options)
-    console.log('uploadSessionStarted', sessionId)
-    let doneSize = 0
-    let pendingChunk
     let hasUserAborted = false
+    let onCancel
     options.cancel = () => {
         hasUserAborted = true
+        if (onCancel) {
+            onCancel()
+        }
     }
+
+    const sessionId = await uploadSessionStart(options)
+    // console.log('uploadSessionStarted', sessionId)
+    let doneSize = 0
+    let pendingData
     options.readable_stream.pause()
     while (!hasUserAborted && doneSize < options.file_size) {
         let doneChunkSize = 0
@@ -104,11 +108,13 @@ async function handleChunkedUpload(options: IOptions) {
                         rs.push(null)
                         return
                     }
-                    // handle prev chunk from last stream
-                    if (pendingChunk) {
-                        doneChunkSize += pendingChunk.length
-                        doneSize += pendingChunk.length
-                        if (rs.push(pendingChunk)) {
+                    // handle prev data from last stream
+                    if (pendingData) {
+                        doneChunkSize += pendingData.length
+                        doneSize += pendingData.length
+                        // console.log('pendingData', pendingData.length, doneSize)
+                        if (rs.push(pendingData)) {
+                            pendingData = false
                             // can read more
                             await nextTick()
                             await step(rs)
@@ -121,39 +127,49 @@ async function handleChunkedUpload(options: IOptions) {
                         return
                     }
                     // read from main stream
-                    const chunk = options.readable_stream.read(size)
+                    const data = options.readable_stream.read(size)
+                    // console.log('chunk', data ? data.length : 'null', doneChunkSize, doneSize)
                     // nothing right now, check again in next tick
-                    if (!chunk) {
+                    if (!data) {
                         await nextTick()
                         await step(rs)
                         return
                     }
                     // has data
-                    if (chunk.length + doneChunkSize > chunkedUploadChunkSize) {
+                    const dataSmallerThanChunkSize = data.length < options.chunk_size!
+                    const dataFitsInChunkUnit = data.length + doneChunkSize <= options.chunk_size!
+                    const dataWontCompleteFile = data.length + doneChunkSize < options.file_size
+                    const existingDataSmallerThanChunkSize = doneChunkSize < options.chunk_size!
+
+                    if ((!existingDataSmallerThanChunkSize) || (dataSmallerThanChunkSize && !dataFitsInChunkUnit && dataWontCompleteFile)) {
                         // need new stream
-                        pendingChunk = chunk
+                        // - if existing data has already filled the chunk unit (!existingDataSmallerThanChunkSize)
+                        // - or if dataSmallerThanChunkSize && !dataFitsInChunkUnit && dataWontCompleteFile
+                        pendingData = data
                         rs.push(null)
                     } else {
                         // carry on with current stream
-                        doneChunkSize += chunk.length
-                        doneSize += chunk.length
-                        if (rs.push(chunk)) {
-                            // can read more
-                            await nextTick()
-                            await step(rs)
-                            return
+                        doneChunkSize += data.length
+                        doneSize += data.length
+                        if (rs.push(data)) {
+                                // can read more
+                                await nextTick()
+                                await step(rs)
+                                return
                         }
                     }
                 }
                 step(this)
             }
         })
-        await uploadSessionAppend(options, sessionId, doneSize, stream)
+        await uploadSessionAppend(options, sessionId, doneSize, stream, (onCancelFn) => {
+            onCancel = onCancelFn
+        })
     }
     if (hasUserAborted) {
         throw new Error("user_aborted")
     }
-    await uploadSessionFinish(options, sessionId, doneSize)
+    return await uploadSessionFinish(options, sessionId, doneSize)
 }
 async function uploadSessionStart(options: IOptions) {
     const sessionRes = await makeRequest({
@@ -169,7 +185,7 @@ async function uploadSessionStart(options: IOptions) {
     assert.string(sessionRes.body.session_id, 'cannot start upload session ' + JSON.stringify(sessionRes))
     return sessionRes.body.session_id
 }
-async function uploadSessionAppend(options: IOptions, sessionId: string, doneSize: number, stream: NodeJS.ReadableStream) {
+async function uploadSessionAppend(options: IOptions, sessionId: string, doneSize: number, stream: NodeJS.ReadableStream, registerOnCancel) {
     return promiseFromCallback((next) => {
         const args = {
             cursor: {
@@ -177,7 +193,7 @@ async function uploadSessionAppend(options: IOptions, sessionId: string, doneSiz
                 offset: doneSize
             }
         }
-        console.log('uploadSessionAppend', args)
+        // console.log('uploadSessionAppend', args)
         const writeStream = request.post({
             uri: `${dropboxApiBasePath}/upload_session/append_v2`,
             method: 'POST',
@@ -187,6 +203,7 @@ async function uploadSessionAppend(options: IOptions, sessionId: string, doneSiz
                 'Dropbox-API-Arg': JSON.stringify(args),
             }
         }, (err, resp, body) => {
+            // console.log('uploadSessionAppend - r', err, body)
             if (err) {
                 return next(err)
             }
@@ -194,6 +211,9 @@ async function uploadSessionAppend(options: IOptions, sessionId: string, doneSiz
                 return next(getHttpError(resp.statusCode, ''))
             }
             return next(null)
+        })
+        registerOnCancel(() => {
+            writeStream.abort()
         })
         stream.pipe(writeStream)
     })
@@ -222,7 +242,7 @@ async function uploadSessionFinish(options: IOptions, sessionId: string, doneSiz
     if (options.client_modified) {
         args.commit.client_modified = options.client_modified
     }
-    console.log('uploadSessionFinish', args)
+    // console.log('uploadSessionFinish', args)
     const res = await makeRequest({
         url: `${dropboxApiBasePath}/upload_session/finish`,
         method: 'POST',
@@ -232,6 +252,7 @@ async function uploadSessionFinish(options: IOptions, sessionId: string, doneSiz
             'Dropbox-API-Arg': JSON.stringify(args)
         }
     })
+    // console.log('uploadSessionFinish - r', res)
     assert.object(res.body, 'cannot finish upload session ' + JSON.stringify(res))
     return res.body
 }

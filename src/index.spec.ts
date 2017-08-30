@@ -27,9 +27,9 @@ before(async () => {
 })
 
 after(async () => {
-    await client.filesDeleteV2({
-        path: baseDir
-    })
+    // await client.filesDeleteV2({
+    //     path: baseDir
+    // })
 })
 
 describe('running testData.uploads', () => {
@@ -50,18 +50,19 @@ async function runTestForUpload(upload, testCancellation = false) {
     const localFilePath = path.resolve(__dirname, '../tests', upload.localFilePath)
     const destination = baseDir + '/' + upload.destination
     const {size} = fs.statSync(localFilePath)
-    const args = {
+    const args: any = {
         access_token: data.access_token,
         readable_stream: fs.createReadStream(localFilePath),
         file_size: size,
         destination,
         forced_chunked_upload: upload.forced_chunked_upload === undefined ? false : upload.forced_chunked_upload,
         autorename: false,
-        mode: 'add'
+        mode: 'add',
+        chunk_size: upload.chunk_size
     }
     if (testCancellation) {
         setTimeout(() => {
-            (args as any).cancel()
+            args.cancel()
         }, 10)
     }
 
