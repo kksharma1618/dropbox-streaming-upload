@@ -25,12 +25,13 @@ export async function makeRequest(options: request.CoreOptions & request.Require
             if (err) {
                 return next(err)
             }
-            const is2xx = resp.statusCode >= 200 && resp.statusCode < 300
+            const statusCode = resp.statusCode || 200
+            const is2xx = statusCode >= 200 && statusCode < 300
             if (!is2xx && throwErrorIfNot2xx) {
-                return next(getHttpError(resp.statusCode, body))
+                return next(getHttpError(statusCode, body))
             }
             next(null, {
-                statusCode: resp.statusCode,
+                statusCode,
                 body: safeParseJson(body)
             })
         })
