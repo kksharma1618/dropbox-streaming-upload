@@ -3,7 +3,8 @@ import * as assert from 'assert-plus'
 import {readable as isReadableStream} from 'is-stream'
 import { promiseFromCallback, safeParseJson, makeRequest, getHttpError} from './utils'
 
-const chunkedUploadMinSize = 1.5e+8
+const chunkedUploadMinSize = 150e+6
+const chunkedUploadChunkSize = 5e+6
 const dropboxApiBasePath = 'https://content.dropboxapi.com/2/files'
 
 export interface IOptions {
@@ -12,6 +13,7 @@ export interface IOptions {
     file_size: number,
     destination: string,
     forced_chunked_upload?: boolean,
+    chunk_size: number,
     mute?: boolean,
     autorename?: boolean,
     mode?: string,
@@ -37,33 +39,13 @@ export default async function upload(options: IOptions) {
     options.autorename = options.autorename === undefined ? true : options.autorename
     options.mute = options.mute === undefined ? false : options.mute
     options.mode = options.mode || 'add'
+    options.chunk_size = options.chunk_size || chunkedUploadChunkSize
 
     if (options.forced_chunked_upload || options.file_size > chunkedUploadMinSize) { // 150 mb
         return handleChunkedUpload(options)
     } else {
         return handleSimpleUpload(options)
     }
-}
-
-async function handleChunkedUpload(options: IOptions) {
-
-    const sessionRes = await makeRequest({
-        url: `${dropboxApiBasePath}/upload_session/start`,
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${options.access_token}`,
-            'Content-Type': 'application/octet-stream',
-            'Dropbox-API-Arg': JSON.stringify({close: false})
-        }
-    })
-
-    assert.string(sessionRes.session_id, 'cannot start upload session ' + JSON.stringify(sessionRes))
-
-    const sessionId = sessionRes.session_id
-
-    // tslint:disable-next-line:no-console
-    console.log('sres', sessionRes)
-    throw 1
 }
 async function handleSimpleUpload(options: IOptions) {
     return promiseFromCallback((next) => {
@@ -99,4 +81,28 @@ async function handleSimpleUpload(options: IOptions) {
         }
         options.readable_stream.pipe(writeStream)
     })
+}
+async function handleChunkedUpload(options: IOptions) {
+
+    const sessionId = await uploadSessionStart(options)
+    const state = {
+        done_size: 0
+    }
+}
+async function uploadSessionStart(options: IOptions) {
+    const sessionRes = await makeRequest({
+        url: `${dropboxApiBasePath}/upload_session/start`,
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${options.access_token}`,
+            'Content-Type': 'application/octet-stream',
+            'Dropbox-API-Arg': JSON.stringify({close: false})
+        }
+    })
+    assert.object(sessionRes.body, 'cannot start upload session ' + JSON.stringify(sessionRes))
+    assert.string(sessionRes.body.session_id, 'cannot start upload session ' + JSON.stringify(sessionRes))
+    return sessionRes.body.session_id
+}
+async function uploadSessionAppend(options: IOptions, state) {
+
 }

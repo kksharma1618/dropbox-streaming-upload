@@ -19,17 +19,15 @@ export function safeParseJson(j) {
     return j
 }
 
-export async function makeRequest(options: request.CoreOptions & request.RequiredUriUrl, throwNot200 = true): Promise<any> {
+export async function makeRequest(options: request.CoreOptions & request.RequiredUriUrl, throwErrorIfNot2xx = true): Promise<any> {
     return promiseFromCallback((next) => {
         request(options, (err, resp, body) => {
             if (err) {
                 return next(err)
             }
-            if (resp.statusCode !== 200 && throwNot200) {
+            const is2xx = resp.statusCode >= 200 && resp.statusCode < 300
+            if (!is2xx && throwErrorIfNot2xx) {
                 return next(getHttpError(resp.statusCode, body))
-            }
-            if (throwNot200) {
-                return next(null, safeParseJson(body))
             }
             next(null, {
                 statusCode: resp.statusCode,
