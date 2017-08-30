@@ -219,14 +219,6 @@ async function uploadSessionAppend(options: IOptions, sessionId: string, doneSiz
     })
 }
 async function uploadSessionFinish(options: IOptions, sessionId: string, doneSize: number) {
-    /*
-    curl -X POST https://content.dropboxapi.com/2/files/upload_session/finish \
-    --header "Authorization: Bearer <get access token>" \
-    --header "Dropbox-API-Arg: {\"cursor\": {\"session_id\": \"1234faaf0678bcde\",
-    \"offset\": 0},\"commit\": {\"path\": \"/Homework/math/Matrices.txt\",\"mode\": \"add\",\"autorename\": true,\"mute\": false}}" \
-    --header "Content-Type: application/octet-stream" \
-    --data-binary @local_file.txt
-    */
     const args: any = {
         cursor: {
             session_id: sessionId,

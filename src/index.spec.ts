@@ -27,9 +27,9 @@ before(async () => {
 })
 
 after(async () => {
-    // await client.filesDeleteV2({
-    //     path: baseDir
-    // })
+    await client.filesDeleteV2({
+        path: baseDir
+    })
 })
 
 describe('running testData.uploads', () => {
