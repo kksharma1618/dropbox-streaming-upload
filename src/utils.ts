@@ -45,3 +45,11 @@ export function getHttpError(statusCode, body) {
     (e as any).body = safeParseJson(body);
     return e
 }
+
+export async function nextTick() {
+    return promiseFromCallback((next) => {
+        process.nextTick(() => {
+            next(null)
+        })
+    })
+}
