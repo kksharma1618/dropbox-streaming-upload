@@ -25,11 +25,11 @@ upload(options).then(function(successMetadata) {
 ```
 
 ## Options
-- *access_token:* Dropbox access token
-- *readable_stream:* Readable stream to upload
-- *file_size:* Total size of upload in bytes. Since we just have the readable stream we need size information separately
-- *destination:* Destination path in dropbox where to upload the file (full file path: ie, if you are uploading roses.jpg to /weeds/ folder, then "/weeds/roses.jpg")
-- *forced_chunked_upload:* By default library will use upload session if *file_size* is greater than 150mb. If you set this to true, then it will force upload session regardless of *file_size*
+- *access_token:* Dropbox access token.
+- *readable_stream:* Readable stream to upload.
+- *file_size:* Total size of upload in bytes. Since we just have the readable stream we need size information separately.
+- *destination:* Destination path in dropbox where to upload the file (full file path: ie, if you are uploading roses.jpg to /weeds/ folder, then "/weeds/roses.jpg").
+- *forced_chunked_upload:* By default library will use upload session if *file_size* is greater than 150mb. If you set this to true, then it will force upload session regardless of *file_size*.
 - *chunk_size:* By default library will use 5mb chunk while using chunked upload. You can override it here (in bytes).
 - *mute:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload or /upload_session/finish. Default is false.
 - *autorename:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload or /upload_session/finish. Default is true.
