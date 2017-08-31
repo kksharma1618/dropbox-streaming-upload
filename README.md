@@ -2,7 +2,7 @@
 
 Streaming uploads for dropbox api v2
 
-[Official js](https://github.com/dropbox/dropbox-sdk-js) sdk by dropbox lacks streaming upload feature. This package provide just that missing feature, nothing else.
+[Official js sdk](https://github.com/dropbox/dropbox-sdk-js) by dropbox lacks streaming upload feature. This package provide just that missing feature, nothing else.
 
 ## Installation
 ```
@@ -29,27 +29,55 @@ upload(options).then(function(successMetadata) {
 - *readable_stream:* Readable stream to upload
 - *file_size:* Total size of upload in bytes. Since we just have the readable stream we need size information separately
 - *destination:* Destination path in dropbox where to upload the file (full file path: ie, if you are uploading roses.jpg to /weeds/ folder, then "/weeds/roses.jpg")
-- *forced_chunked_upload:* By default library will use upload session if file_size is greater than 150mb. If you set this to true, then it will force upload session regardless of file_size
-- *:*
-- *:*
-- *:*
-- *:*
-- *:*
-- *:*
-- *:*
-- *:*
+- *forced_chunked_upload:* By default library will use upload session if *file_size* is greater than 150mb. If you set this to true, then it will force upload session regardless of *file_size*
+- *chunk_size:* By default library will use 5mb chunk while using chunked upload. You can override it here (in bytes).
+- *mute:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload /upload_session/finish. Default is false.
+- *autorename:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload /upload_session/finish. Default is true.
+- *mode:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload /upload_session/finish. Default is "add".
+- *client_modified:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload /upload_session/finish.
 
-{
-    access_token: string,
-    readable_stream: NodeJS.ReadableStream,
-    file_size: number,
-    destination: string,
-    forced_chunked_upload?: boolean,
-    chunk_size?: number,
-    mute?: boolean,
-    autorename?: boolean,
-    mode?: string,
-    client_modified?: string
-    // tslint:disable-next-line:max-line-length
-    cancel?: () => any // Do not pass this function. Library will attach cancel function here which you can use to cancel upload request. Cancelling will cancel upload and reject promise with Error object with message === "user_aborted"
+## Cancelling upload
+``` javascript
+const upload = require('dropbox-streaming-upload')
+const options = {
+    access_token: 'token',
+    readable_stream: someStream,
+    file_size: totalSize,
+    destination: '/mypath/myfile.ext',
 }
+upload(options).then(function(successMetadata) {
+
+}, function(error) {
+    if (error.message === 'user_aborted') {
+        // you cancelled the upload below
+    }
+})
+
+// when you want to cancel it (before upload is done/failed)
+// cancel fn is added to your options object by library
+options.cancel()
+```
+
+## Unit testing
+- clone this repository
+- run
+```
+npm install
+```
+- copy ./sample\_test\_data.json to ./tests/test\_data.json
+- fill in "access\_token"
+- fill in "unitTestBaseFolder". Unit test will create a tmp folder in that folder and upload files inside that (tmp folder will be removed in the end)
+- update "uploads" array as needed. structure of uploads array item:
+``` json
+{
+    "localFilePath": "localfilepath.ext",
+    "destination": "./relative/to/tmp/folder/risingearth.jpg",
+    "forced_chunked_upload": false,
+    "chunk_size": 5e+6
+}
+```
+- forced\_chunked\_upload and chunk\_size are optional
+- run 
+```
+npm test
+```
