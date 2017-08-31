@@ -1,6 +1,6 @@
 {
   "name": "dropbox-streaming-upload",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Streaming uploads to dropbox v2 api",
   "main": "build/index",
   "types": "build/index",
