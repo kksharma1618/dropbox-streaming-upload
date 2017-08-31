@@ -16,7 +16,7 @@ npm install --save dropbox-streaming-upload
 
 ## Usage
 ``` javascript
-const upload = require('dropbox-streaming-upload')
+const upload = require('dropbox-streaming-upload').default
 upload(options).then(function(successMetadata) {
 
 }, function(error) {
@@ -38,7 +38,7 @@ upload(options).then(function(successMetadata) {
 
 ## Cancelling upload
 ``` javascript
-const upload = require('dropbox-streaming-upload')
+const upload = require('dropbox-streaming-upload').default
 const options = {
     access_token: 'token',
     readable_stream: someStream,
