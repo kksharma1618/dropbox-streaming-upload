@@ -1,10 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es5",
     "module": "commonjs",
     "typeRoots": ["node_modules/@types"],
     "outDir": "build",
     "declaration": true,
+    "lib": [
+      "es6"
+    ],
     "strict": true,
     "noImplicitAny": false,
     "noImplicitReturns": true,
