@@ -31,10 +31,10 @@ upload(options).then(function(successMetadata) {
 - *destination:* Destination path in dropbox where to upload the file (full file path: ie, if you are uploading roses.jpg to /weeds/ folder, then "/weeds/roses.jpg")
 - *forced_chunked_upload:* By default library will use upload session if *file_size* is greater than 150mb. If you set this to true, then it will force upload session regardless of *file_size*
 - *chunk_size:* By default library will use 5mb chunk while using chunked upload. You can override it here (in bytes).
-- *mute:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload /upload_session/finish. Default is false.
-- *autorename:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload /upload_session/finish. Default is true.
-- *mode:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload /upload_session/finish. Default is "add".
-- *client_modified:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload /upload_session/finish.
+- *mute:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload or /upload_session/finish. Default is false.
+- *autorename:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload or /upload_session/finish. Default is true.
+- *mode:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload or /upload_session/finish. Default is "add".
+- *client_modified:* See dropbox [documentation](https://www.dropbox.com/developers/documentation/http/documentation#files-upload) for /upload or /upload_session/finish.
 
 ## Cancelling upload
 ``` javascript
@@ -54,7 +54,8 @@ upload(options).then(function(successMetadata) {
 })
 
 // when you want to cancel it (before upload is done/failed)
-// cancel fn is added to your options object by library
+// cancel function is added to your options object by library
+// calling cancel function after upload is done/failed has no effect
 options.cancel()
 ```
 
