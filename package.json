@@ -8,7 +8,7 @@
     "node": ">=4"
   },
   "scripts": {
-    "prepublish___": "npm run build",
+    "prepublish": "npm run build",
     "build": "tsc",
     "test": "mocha -r ts-node/register src/**/*.spec.ts --timeout 300000",
     "testwatch": "mocha -r ts-node/register -w --watch-extensions ts src/**/*.spec.ts",
