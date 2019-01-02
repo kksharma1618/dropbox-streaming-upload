@@ -120,6 +120,7 @@ async function handleChunkedUpload(options: IOptions) {
                             await step(rs)
                             return
                         }
+                        pendingData = false
                     }
                     // if file is done end the stream
                     if (doneSize >= options.file_size) {
